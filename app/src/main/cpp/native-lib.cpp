@@ -241,11 +241,3 @@ extern "C" JNIEXPORT void JNICALL Java_team_animecon_display_SerialPort_nativeCl
     LOGD("close(fd = %d)", descriptor);
     close(descriptor);
 }
-
-extern "C" JNIEXPORT jstring JNICALL
-Java_team_animecon_display_MainActivity_stringFromJNI(
-        JNIEnv *env,
-jobject /* this */) {
-const char* hello = "Hello from C++ :)";
-return env->NewStringUTF(hello);
-}

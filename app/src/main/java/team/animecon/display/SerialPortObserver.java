@@ -7,5 +7,8 @@ package team.animecon.display;
  * Interface defining the callbacks related to the serial port's communication.
  */
 public interface SerialPortObserver {
-    // todo
+    /**
+     * To be called when an error has occurred on the serial port.
+     */
+    void onError(String operation, String message);
 }

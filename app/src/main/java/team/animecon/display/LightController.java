@@ -13,6 +13,14 @@ import java.io.FileOutputStream;
  * The `LightController` class is used to communicate with the LED strip around the Display, which
  * is a serial device exposed on `/dev/ttyS3` at 9600 baud. The actual input/output will be managed
  * by JavaScript to maintain flexibility in updating our behaviour.
+ *
+ * The hardware in the displays we use supports the following commands:
+ *
+ *   LIVE:{RED,GREEN,BLUE}:{SECONDS}          - Enable the "live" mode for the given colour.
+ *   KEEP:{RED,GREEN,BLUE}:{SECONDS}:{0-255}  - Enable the "keep" mode for the given colour.
+ *   CRAZY:{SECONDS}                          - Enable the "crazy" mode.
+ *   FLASH:{SECONDS}                          - Enable the "flash" mode.
+ *   CLOSE:{RED,GREEN,BLUE}                   - Shuts off the given colour(s) entirely.
  */
 public class LightController implements SerialPortObserver {
     private static final String TAG = "LightController";
@@ -37,8 +45,8 @@ public class LightController implements SerialPortObserver {
      * Sends a command to the device's lights. This should be replaced by a far more sensible API
      * that allows input/output from JavaScript.
      */
-    public void sendCommand() {
-        this.mSerialPort.write("LIVE:GREEN:10");
+    public void sendCommand(String command) {
+        this.mSerialPort.write(command);
     }
 
     /**
@@ -46,5 +54,12 @@ public class LightController implements SerialPortObserver {
      */
     public void close() {
         this.mSerialPort.close();
+    }
+
+    // ---------------------------------------------------------------------------------------------
+
+    @Override
+    public void onError(String operation, String message) {
+        Log.e(TAG, "Error (" + operation + "): " + message);
     }
 }

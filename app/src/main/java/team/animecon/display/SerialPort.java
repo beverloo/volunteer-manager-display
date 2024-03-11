@@ -13,8 +13,6 @@ import java.io.IOException;
  * code for actually opening the port, and combines functionality from elsewhere to make it work.
  */
 public class SerialPort {
-    private static final String TAG = "SerialPort";
-
     /**
      * The device that should be connected to. (E.g. "/dev/ttyS3")
      */
@@ -32,7 +30,7 @@ public class SerialPort {
 
     /**
      * The file descriptor (created by native code) and the input- and output streams through which
-     * we'll communicate with the device.
+     * we'll communicate with the device. The `mFd` member is accessed by native code too.
      */
     private FileDescriptor mFd;
     private FileInputStream mFileInputStream;
@@ -47,21 +45,22 @@ public class SerialPort {
     /**
      * Opens a file descriptor to the device.
      */
-    public void open() {
+    public boolean open() {
         File deviceFile = new File(this.mDevice);
         if (!deviceFile.canRead() || !deviceFile.canWrite()) {
-            Log.e(TAG, "The device is not readable or writable: " + this.mDevice);
-            return;
+            this.mObserver.onError("open", "The device is not readable or writable.");
+            return false;
         }
 
         this.mFd = nativeOpen(deviceFile.getAbsolutePath(), this.mBaudRate, 8, 0, 1, 0);
         if (this.mFd == null) {
-            Log.e(TAG, "The device could not be opened: " + this.mDevice);
-            return;
+            this.mObserver.onError("open", "A file descriptor to the device could not be opened.");
+            return false;
         }
 
         this.mFileInputStream = new FileInputStream(this.mFd);
         this.mFileOutputStream = new FileOutputStream(this.mFd);
+        return true;
     }
 
     /**
@@ -70,9 +69,10 @@ public class SerialPort {
     public void write(String command) {
         byte[] commandBytes = command.getBytes();
         try {
+            Log.w("SerialPort", "Write: " + command);
             this.mFileOutputStream.write(commandBytes);
         } catch (IOException e) {
-            e.printStackTrace();
+            this.mObserver.onError("write", e.getMessage());
         }
     }
 
@@ -86,7 +86,7 @@ public class SerialPort {
                 this.mFileOutputStream = null;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            this.mObserver.onError("close", "mFileOutputStream: " + e.getMessage());
         }
 
         try {
@@ -95,7 +95,7 @@ public class SerialPort {
                 this.mFileInputStream = null;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            this.mObserver.onError("close", "mFileInputStream: " + e.getMessage());
         }
 
         nativeClose();
