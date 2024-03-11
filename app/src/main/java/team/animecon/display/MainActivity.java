@@ -26,6 +26,11 @@ public class MainActivity extends AppCompatActivity {
         // Example of a call to a native method
         TextView tv = binding.sampleText;
         tv.setText(stringFromJNI());
+
+        LightController lightController = new LightController("/dev/ttyS3", 9600);
+        lightController.open();
+        lightController.sendCommand();
+        lightController.close();
     }
 
     /**
