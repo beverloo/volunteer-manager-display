@@ -34,10 +34,6 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Example of a call to a native method
-        TextView tv = binding.sampleText;
-        tv.setText("Hello 2.0!");
-
         mBrightnessController.initialise();
         mKioskController.initialise();
 
@@ -62,5 +58,8 @@ public class MainActivity extends AppCompatActivity {
             mLightController.sendCommand("KEEP:BLUE:0:25");
             mLightController.close();
         }
+
+        binding.webview.loadUrl("https://animecon.team/display");
+        // TODO: Inject the APIs
     }
 }
