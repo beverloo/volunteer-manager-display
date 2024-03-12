@@ -5,6 +5,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.TextView;
 
 import team.animecon.display.databinding.ActivityMainBinding;
@@ -36,6 +39,18 @@ public class MainActivity extends AppCompatActivity {
 
         mBrightnessController.initialise();
         mKioskController.initialise();
+
+        // Initialise WebView:
+        {
+            WebView webView = binding.webview;
+            WebSettings webSettings = webView.getSettings();
+            webSettings.setJavaScriptEnabled(true);
+
+            webView.setWebViewClient(new WebViewClient()
+            {
+                // no behaviour necessary (yet)
+            });
+        }
 
         // BrightnessController test:
         {
