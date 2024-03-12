@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
 import android.widget.TextView;
 
 import team.animecon.display.databinding.ActivityMainBinding;
@@ -16,6 +17,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private BrightnessController mBrightnessController;
+    private KioskController mKioskController;
     private LightController mLightController;
 
     private ActivityMainBinding binding;
@@ -26,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         mBrightnessController = new BrightnessController(this, 10);
+        mKioskController = new KioskController(this);
         mLightController = new LightController("/dev/ttyS3", 9600);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
@@ -33,12 +36,20 @@ public class MainActivity extends AppCompatActivity {
 
         // Example of a call to a native method
         TextView tv = binding.sampleText;
-        tv.setText("Hello!");
+        tv.setText("Hello 2.0!");
+
+        mBrightnessController.initialise();
+        mKioskController.initialise();
 
         // BrightnessController test:
         {
-            mBrightnessController.initialise();
             mBrightnessController.update(10);
+        }
+
+        // KioskController test:
+        {
+            mKioskController.hideUserInterface();
+            //mKioskController.enable();
         }
 
         // LightController test:
