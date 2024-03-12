@@ -13,6 +13,11 @@ import androidx.webkit.WebMessageCompat;
 import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Enumeration;
+
 /**
  * The `WebMessageListener` listens for command coming from JavaScript, telling the host app to
  * execute commands. This class is responsible for accepting, parsing, and then routing messages.
@@ -65,6 +70,8 @@ public class WebMessageListener implements WebViewCompat.WebMessageListener {
 
         if (messageData.startsWith("brightness:")) {
             this.onBrightnessCommand(messageData.substring(/* len(brightness:)= */ 11), replyProxy);
+        } else if (messageData.startsWith("ip")) {
+            this.onIpCommand(replyProxy);
         } else if (messageData.startsWith("kiosk:")) {
             this.onKioskCommand(messageData.substring(/* len(kiosk:)= */ 6), replyProxy);
         } else if (messageData.startsWith("light:")) {
@@ -91,6 +98,28 @@ public class WebMessageListener implements WebViewCompat.WebMessageListener {
         } catch (NumberFormatException e) {
             Log.e(TAG, "Received an invalid brightness value: " + command);
             this.respond(replyProxy, "error:Invalid brightness command");
+        }
+    }
+
+    /**
+     * Deals with the ip command, which outputs the local IP addresses.
+     */
+    private void onIpCommand(@NonNull JavaScriptReplyProxy replyProxy) {
+        try {
+            Enumeration<NetworkInterface> networkIter = NetworkInterface.getNetworkInterfaces();
+            while (networkIter.hasMoreElements()) {
+                NetworkInterface networkInterface = networkIter.nextElement();
+
+                Enumeration<InetAddress> addressIter = networkInterface.getInetAddresses();
+                while (addressIter.hasMoreElements()) {
+                    InetAddress address = addressIter.nextElement();
+                    if (!address.isLoopbackAddress())
+                        this.respond(replyProxy, "ip:" + address.getHostAddress());
+                }
+            }
+            this.respond(replyProxy, "success");
+        } catch (SocketException e) {
+            this.respond(replyProxy, "error:" + e.getMessage());
         }
     }
 
