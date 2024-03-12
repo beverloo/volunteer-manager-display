@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        this.mBrightnessController = new BrightnessController(this, 10);
+        this.mBrightnessController = new BrightnessController(this, 5);
         this.mKioskController = new KioskController(this);
         this.mLightController = new LightController("/dev/ttyS3", 9600);
 
