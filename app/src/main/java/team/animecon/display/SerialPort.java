@@ -46,6 +46,10 @@ public class SerialPort {
      * Opens a file descriptor to the device.
      */
     public boolean open() {
+        if (this.mFileInputStream != null) {
+            return false;  // already open
+        }
+
         File deviceFile = new File(this.mDevice);
         if (!deviceFile.canRead() || !deviceFile.canWrite()) {
             this.mObserver.onError("open", "The device is not readable or writable.");
@@ -66,20 +70,30 @@ public class SerialPort {
     /**
      * Writes the given `command` over the serial connection.
      */
-    public void write(String command) {
+    public boolean write(String command) {
+        if (this.mFileOutputStream == null) {
+            return false;
+        }
+
         byte[] commandBytes = command.getBytes();
         try {
             Log.w("SerialPort", "Write: " + command);
             this.mFileOutputStream.write(commandBytes);
+            return true;
         } catch (IOException e) {
             this.mObserver.onError("write", e.getMessage());
+            return false;
         }
     }
 
     /**
      * Closes the file descriptor with the device.
      */
-    public void close() {
+    public boolean close() {
+        if (this.mFileOutputStream == null) {
+            return false;  // already closed
+        }
+
         try {
             if (this.mFileOutputStream != null) {
                 this.mFileOutputStream.close();
@@ -99,6 +113,7 @@ public class SerialPort {
         }
 
         nativeClose();
+        return true;
     }
 
     public native void nativeClose();

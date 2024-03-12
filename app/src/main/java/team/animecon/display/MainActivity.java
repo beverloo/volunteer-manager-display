@@ -75,6 +75,9 @@ public class MainActivity extends AppCompatActivity {
         // Always hide the user interface. Kiosk mode can be enabled independently.
         this.mKioskController.hideUserInterface();
 
+        // Open the serial port with the light controller. It can be re-opened programmatically.
+        this.mLightController.open();
+
         // Load the Volunteer Manager's display subapp.
         binding.webview.loadUrl("http://192.168.252.161:3000/display");
     }

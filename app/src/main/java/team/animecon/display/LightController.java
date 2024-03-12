@@ -37,23 +37,23 @@ public class LightController implements SerialPortObserver {
     /**
      * Opens the serial port connection with the device.
      */
-    public void open() {
-        this.mSerialPort.open();
+    public boolean open() {
+        return this.mSerialPort.open();
     }
 
     /**
      * Sends a command to the device's lights. This should be replaced by a far more sensible API
      * that allows input/output from JavaScript.
      */
-    public void sendCommand(String command) {
-        this.mSerialPort.write(command);
+    public boolean sendCommand(String command) {
+        return this.mSerialPort.write(command);
     }
 
     /**
      * Closes the serial port connection with the device.
      */
-    public void close() {
-        this.mSerialPort.close();
+    public boolean close() {
+        return this.mSerialPort.close();
     }
 
     // ---------------------------------------------------------------------------------------------

@@ -113,6 +113,8 @@ public class WebMessageListener implements WebViewCompat.WebMessageListener {
 
     /**
      * Deals with light commands. The following commands are supported:
+     * - open                                     Opens the serial connection with the light.
+     * - close                                    Closes the serial connection with the light.
      * - LIVE:{RED,GREEN,BLUE}:{SECONDS}          Enable the "live" mode for the given colour.
      * - KEEP:{RED,GREEN,BLUE}:{SECONDS}:{0-255}  Enable the "keep" mode for the given colour.
      * - CRAZY:{SECONDS}                          Enable the "crazy" mode.
@@ -120,7 +122,20 @@ public class WebMessageListener implements WebViewCompat.WebMessageListener {
      * - CLOSE:{RED,GREEN,BLUE}                   Shuts off the given colour(s) entirely.
      */
     private void onLightCommand(@NonNull String command, @NonNull JavaScriptReplyProxy replyProxy) {
-        this.mLightController.sendCommand(command);
-        this.respond(replyProxy, "success");
+        boolean result = false;
+
+        if (command.startsWith("open")) {
+            result = this.mLightController.open();
+        } else if (command.startsWith("close")) {
+            result = this.mLightController.close();
+        } else {
+            result = this.mLightController.sendCommand(command);
+        }
+
+        if (result) {
+            this.respond(replyProxy, "success");
+        } else {
+            this.respond(replyProxy, "error:Invalid light command");
+        }
     }
 }
