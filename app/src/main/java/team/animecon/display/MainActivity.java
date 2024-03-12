@@ -1,14 +1,19 @@
+// Copyright 2024 Peter Beverloo & AnimeCon. All rights reserved.
+// Use of this source code is governed by a MIT license that can be found in the LICENSE file.
+
 package team.animecon.display;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.webkit.WebViewClientCompat;
+import androidx.webkit.WebViewCompat;
+import androidx.webkit.WebViewFeature;
 
 import android.os.Bundle;
-import android.os.SystemClock;
-import android.util.Log;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.TextView;
+
+import java.util.Collections;
+import java.util.HashSet;
 
 import team.animecon.display.databinding.ActivityMainBinding;
 
@@ -23,6 +28,8 @@ public class MainActivity extends AppCompatActivity {
     private KioskController mKioskController;
     private LightController mLightController;
 
+    private WebMessageListener mWebMessageListener;
+
     private ActivityMainBinding binding;
 
 
@@ -30,51 +37,45 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mBrightnessController = new BrightnessController(this, 10);
-        mKioskController = new KioskController(this);
-        mLightController = new LightController("/dev/ttyS3", 9600);
+        this.mBrightnessController = new BrightnessController(this, 10);
+        this.mKioskController = new KioskController(this);
+        this.mLightController = new LightController("/dev/ttyS3", 9600);
+
+        this.mWebMessageListener = new WebMessageListener(
+                this.mBrightnessController, this.mKioskController, this.mLightController);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        mBrightnessController.initialise();
-        mKioskController.initialise();
+        this.mBrightnessController.initialise();
+        this.mKioskController.initialise();
 
         // Initialise WebView:
         {
             WebView webView = binding.webview;
+
             WebSettings webSettings = webView.getSettings();
             webSettings.setJavaScriptEnabled(true);
 
-            webView.setWebViewClient(new WebViewClient()
+            HashSet<String> allowedOriginRules =
+                    new HashSet<String>(Collections.singletonList("*"));
+
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
+                WebViewCompat.addWebMessageListener(
+                        webView, "animeCon", allowedOriginRules,
+                        this.mWebMessageListener);
+            }
+
+            webView.setWebViewClient(new WebViewClientCompat()
             {
                 // no behaviour necessary (yet)
             });
         }
 
-        // BrightnessController test:
-        {
-            mBrightnessController.update(10);
-        }
+        // Always hide the user interface. Kiosk mode can be enabled independently.
+        this.mKioskController.hideUserInterface();
 
-        // KioskController test:
-        {
-            mKioskController.hideUserInterface();
-            //mKioskController.enable();
-        }
-
-        // LightController test:
-        {
-            mLightController.open();
-            mLightController.sendCommand("KEEP:RED:0:255");
-            SystemClock.sleep(30);
-            mLightController.sendCommand("KEEP:GREEN:0:255");
-            SystemClock.sleep(40);
-            mLightController.sendCommand("KEEP:BLUE:0:25");
-            mLightController.close();
-        }
-
-        binding.webview.loadUrl("https://animecon.team/display");
-        // TODO: Inject the APIs
+        // Load the Volunteer Manager's display subapp.
+        binding.webview.loadUrl("http://192.168.252.161:3000/display");
     }
 }
