@@ -8,7 +8,9 @@ import androidx.webkit.WebViewClientCompat;
 import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 
+import android.graphics.Color;
 import android.os.Bundle;
+import android.webkit.CookieManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
@@ -53,9 +55,12 @@ public class MainActivity extends AppCompatActivity {
         // Initialise WebView:
         {
             WebView webView = binding.webview;
+            webView.setBackgroundColor(Color.parseColor("#211a1a"));
 
             WebSettings webSettings = webView.getSettings();
+            webSettings.setDomStorageEnabled(true);
             webSettings.setJavaScriptEnabled(true);
+            webSettings.setMediaPlaybackRequiresUserGesture(false);
 
             HashSet<String> allowedOriginRules =
                     new HashSet<String>(Collections.singletonList("*"));
@@ -65,6 +70,8 @@ public class MainActivity extends AppCompatActivity {
                         webView, "animeCon", allowedOriginRules,
                         this.mWebMessageListener);
             }
+
+            CookieManager.getInstance().setAcceptCookie(true);
 
             webView.setWebViewClient(new WebViewClientCompat()
             {
@@ -78,7 +85,8 @@ public class MainActivity extends AppCompatActivity {
         // Open the serial port with the light controller. It can be re-opened programmatically.
         this.mLightController.open();
 
-        // Load the Volunteer Manager's display subapp.
-        binding.webview.loadUrl("http://192.168.252.161:3000/display");
+        // Load the Volunteer Manager's display subapp. Provisioning of the display will have to
+        // be done by one of the volunteering leads, until that moment it's idle.
+        binding.webview.loadUrl("https://animecon.team/display");
     }
 }
