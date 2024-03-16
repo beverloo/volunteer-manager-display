@@ -40,6 +40,16 @@ public class BrightnessController {
     }
 
     /**
+     * Reads the current brightness from the system. This does the right thing since Android P.
+     */
+    public int getBrightness() {
+        float brightness = Settings.System.getInt(
+                this.mContext.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, -1);
+
+        return (int) Math.floor((double) brightness);
+    }
+
+    /**
      * Sets the system brightness to the given `brightness`, which must be within valid range.
      */
     public boolean update(int brightness) {

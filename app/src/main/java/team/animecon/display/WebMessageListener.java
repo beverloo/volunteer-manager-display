@@ -16,7 +16,9 @@ import androidx.webkit.WebViewFeature;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 
 /**
  * The `WebMessageListener` listens for command coming from JavaScript, telling the host app to
@@ -31,13 +33,15 @@ public class WebMessageListener implements WebViewCompat.WebMessageListener {
     private final BrightnessController mBrightnessController;
     private final KioskController mKioskController;
     private final LightController mLightController;
+    private final VolumeController mVolumeController;
 
     public WebMessageListener(
             BrightnessController brightnessController, KioskController kioskController,
-            LightController lightController) {
+            LightController lightController, VolumeController volumeController) {
         this.mBrightnessController = brightnessController;
         this.mKioskController = kioskController;
         this.mLightController = lightController;
+        this.mVolumeController = volumeController;
     }
 
     /**
@@ -76,6 +80,10 @@ public class WebMessageListener implements WebViewCompat.WebMessageListener {
             this.onKioskCommand(messageData.substring(/* len(kiosk:)= */ 6), replyProxy);
         } else if (messageData.startsWith("light:")) {
             this.onLightCommand(messageData.substring(/* len(light:)= */ 6), replyProxy);
+        } else if (messageData.startsWith("lightset:")) {
+            this.onLightSetCommand(messageData.substring(/* len(lightset:)= */ 9), replyProxy);
+        } else if (messageData.startsWith("volume:")) {
+            this.onVolumeCommand(messageData.substring(/* len(volume:)= */ 7), replyProxy);
         } else {
             this.respond(replyProxy, "error:Invalid command");
         }
@@ -83,10 +91,18 @@ public class WebMessageListener implements WebViewCompat.WebMessageListener {
 
     /**
      * Deals with brightness commands. The following commands are supported:
+     * - get        Returns the device's current brightness level.
      * - {0-255}    Updates the device's brightness to the given value.
      */
     private void onBrightnessCommand(
             @NonNull String command, @NonNull JavaScriptReplyProxy replyProxy) {
+        if (command.startsWith("get")) {
+            int brightness = this.mBrightnessController.getBrightness();
+
+            this.respond(replyProxy, "success:" + brightness);
+            return;
+        }
+
         try {
             int brightness = Integer.parseInt(command);
             if (brightness >= 0 && brightness <= 255) {
@@ -106,6 +122,8 @@ public class WebMessageListener implements WebViewCompat.WebMessageListener {
      */
     private void onIpCommand(@NonNull JavaScriptReplyProxy replyProxy) {
         try {
+            List<String> addresses = new ArrayList<String>();
+
             Enumeration<NetworkInterface> networkIter = NetworkInterface.getNetworkInterfaces();
             while (networkIter.hasMoreElements()) {
                 NetworkInterface networkInterface = networkIter.nextElement();
@@ -114,10 +132,10 @@ public class WebMessageListener implements WebViewCompat.WebMessageListener {
                 while (addressIter.hasMoreElements()) {
                     InetAddress address = addressIter.nextElement();
                     if (!address.isLoopbackAddress())
-                        this.respond(replyProxy, "ip:" + address.getHostAddress());
+                        addresses.add(address.getHostAddress());
                 }
             }
-            this.respond(replyProxy, "success");
+            this.respond(replyProxy, "success:" + String.join(";", addresses));
         } catch (SocketException e) {
             this.respond(replyProxy, "error:" + e.getMessage());
         }
@@ -165,6 +183,66 @@ public class WebMessageListener implements WebViewCompat.WebMessageListener {
             this.respond(replyProxy, "success");
         } else {
             this.respond(replyProxy, "error:Invalid light command");
+        }
+    }
+
+    /**
+     * Sets the lights to a predefined value. Singular command that results in multiple commands
+     * to be issued over the serial port for improved performance.
+     *
+     * - {0-255},{0-255},{0-255}   Updates the light strip's colour to the given R, G, B
+     */
+    private void onLightSetCommand(
+            @NonNull String command, @NonNull JavaScriptReplyProxy replyProxy) {
+        String[] components = command.split(",");
+        if (components.length == 3) {
+            try {
+                int red = Integer.parseInt(components[0]);
+                int green = Integer.parseInt(components[1]);
+                int blue = Integer.parseInt(components[2]);
+
+                if (red < 0 || green < 0 || blue < 0 || red > 255 || green > 255 || blue > 255) {
+                    this.respond(replyProxy, "error:Invalid light command (out of bounds)");
+                    return;
+                }
+
+                if (this.mLightController.set(red, green, blue)) {
+                    this.respond(replyProxy, "success");
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                this.respond(replyProxy, "error:Invalid light command (odd number)");
+                return;
+            }
+        }
+        this.respond(replyProxy, "error:Invalid light command (needs rgb)");
+    }
+
+    /**
+     * Deals with volume commands. The following commands are supported:
+     * - get        Returns the device's current volume level.
+     * - {0-255}    Updates the device's volume to the given value.
+     */
+    private void onVolumeCommand(
+            @NonNull String command, @NonNull JavaScriptReplyProxy replyProxy) {
+        if (command.startsWith("get")) {
+            int volume = this.mVolumeController.getVolume();
+
+            this.respond(replyProxy, "success:" + volume);
+            return;
+        }
+
+        try {
+            int volume = Integer.parseInt(command);
+            if (volume >= 0 && volume <= 255) {
+                this.mVolumeController.update(volume);
+                this.respond(replyProxy, "success");
+            } else {
+                this.respond(replyProxy, "error:Invalid volume command (out of bounds");
+            }
+        } catch (NumberFormatException e) {
+            Log.e(TAG, "Received an invalid volume value: " + command);
+            this.respond(replyProxy, "error:Invalid volume command");
         }
     }
 }

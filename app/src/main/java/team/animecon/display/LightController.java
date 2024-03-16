@@ -3,6 +3,7 @@
 
 package team.animecon.display;
 
+import android.os.SystemClock;
 import android.util.Log;
 
 import java.io.FileDescriptor;
@@ -39,6 +40,17 @@ public class LightController implements SerialPortObserver {
      */
     public boolean open() {
         return this.mSerialPort.open();
+    }
+
+    /**
+     * Updates the light bar colour to the given `red`, `green` and `blue` RGB values.
+     */
+    public boolean set(int red, int green, int blue) {
+        this.sendCommand("KEEP:RED:0:" + red);
+        SystemClock.sleep(40);
+        this.sendCommand("KEEP:GREEN:0:" + green);
+        SystemClock.sleep(50);
+        return this.sendCommand("KEEP:BLUE:0:" + blue);
     }
 
     /**

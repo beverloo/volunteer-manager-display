@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private BrightnessController mBrightnessController;
     private KioskController mKioskController;
     private LightController mLightController;
+    private VolumeController mVolumeController;
 
     private WebMessageListener mWebMessageListener;
 
@@ -42,9 +43,11 @@ public class MainActivity extends AppCompatActivity {
         this.mBrightnessController = new BrightnessController(this, 5);
         this.mKioskController = new KioskController(this);
         this.mLightController = new LightController("/dev/ttyS3", 9600);
+        this.mVolumeController = new VolumeController(this);
 
         this.mWebMessageListener = new WebMessageListener(
-                this.mBrightnessController, this.mKioskController, this.mLightController);
+                this.mBrightnessController, this.mKioskController, this.mLightController,
+                this.mVolumeController);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
