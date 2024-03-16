@@ -149,9 +149,11 @@ public class WebMessageListener implements WebViewCompat.WebMessageListener {
     private void onKioskCommand(@NonNull String command, @NonNull JavaScriptReplyProxy replyProxy) {
         if (command.startsWith("disable")) {
             this.mKioskController.disable();
+            this.mKioskController.hideUserInterface();
             this.respond(replyProxy, "success");
         } else if (command.startsWith("enable")) {
             this.mKioskController.enable();
+            this.mKioskController.hideUserInterface();
             this.respond(replyProxy, "success");
         } else {
             this.respond(replyProxy, "error:Invalid kiosk command");

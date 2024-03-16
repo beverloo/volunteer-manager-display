@@ -38,12 +38,12 @@ public class AdminReceiver extends DeviceAdminReceiver {
 
     @Override
     public void onLockTaskModeEntering(@NonNull Context context, @NonNull Intent intent, @NonNull String pkg) {
-        this.showMessage(context, "VM: Kiosk mode enabled");
+        //this.showMessage(context, "VM: Kiosk mode enabled");
     }
 
     @Override
     public void onLockTaskModeExiting(@NonNull Context context, @NonNull Intent intent) {
-        this.showMessage(context, "VM: Kiosk mode disabled");
+        //this.showMessage(context, "VM: Kiosk mode disabled");
     }
 
     @Override
