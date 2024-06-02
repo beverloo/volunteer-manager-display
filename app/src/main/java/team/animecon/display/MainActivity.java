@@ -3,17 +3,26 @@
 
 package team.animecon.display;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.webkit.WebViewClientCompat;
 import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.webkit.CookieManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Collections;
 import java.util.HashSet;
 
@@ -87,6 +96,33 @@ public class MainActivity extends AppCompatActivity {
 
         // Open the serial port with the light controller. It can be re-opened programmatically.
         this.mLightController.open();
+
+        // Attach an uncaught exception handler to automagically restart the app when a crash is
+        // observed. This is not ideal, but beats relying on end user interaction.
+        final Activity defaultActivity = this;
+        final Thread.UncaughtExceptionHandler defaultHandler =
+                Thread.getDefaultUncaughtExceptionHandler();
+
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(@NonNull Thread thread, @NonNull Throwable throwable) {
+                StringWriter stackTraceString = new StringWriter();
+                throwable.printStackTrace(new PrintWriter(stackTraceString));
+                System.err.println(stackTraceString);
+
+                Intent launchIntent = new Intent(defaultActivity.getIntent());
+                @SuppressLint("WrongConstant") PendingIntent pendingIntent = PendingIntent.getActivity(
+                        defaultActivity.getApplicationContext(), 0, launchIntent,
+                        defaultActivity.getIntent().getFlags());
+
+                AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                alarmManager.set(
+                        AlarmManager.RTC, System.currentTimeMillis() + 2000,
+                        pendingIntent);
+
+                System.exit(2);
+            }
+        });
 
         // Load the Volunteer Manager's display subapp. Provisioning of the display will have to
         // be done by one of the volunteering leads, until that moment it's idle.

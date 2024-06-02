@@ -15,16 +15,23 @@ all our other code is open source, so this may as well be part of that.
 We require a rooted Android 8.0 (SDK level 26) or later device. A 1280x800 pixel screen is expected,
 however the user interface most likely scales well enough for other resolutions.
 
-#### 1. Build the Android app
+#### 1. Connecting to the devices
+Identify the device by its IP address, and use the `adb` tool to connect over WiFi:
+
+```
+adb connect 192.168.12.34`
+```
+
+#### 2. Build the Android app
 This repository contains the entire Android Studio project. A small amount of native code is
 included for communicating with the serial port for the light strip. Build the APK and deploy it to
 the device.
 
-#### 2. Grant the "Device admin apps" special app permission
+#### 3. Grant the "Device admin apps" special app permission
 
-#### 3. Grant the "Modify system settings" special app permission
+#### 4. Grant the "Modify system settings" special app permission
 
-#### 4. Grant device owner status to the app
+#### 5. Grant device owner status to the app
 ```
 adb shell dpm set-device-owner team.animecon.display/.AdminReceiver
 ```
